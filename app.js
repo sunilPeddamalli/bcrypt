@@ -2,7 +2,8 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const mongoose = require('mongoose');
-const User = require('./modals/user')
+const User = require('./modals/user');
+const bcrypt = require('bcrypt');
 
 mongoose.connect('mongodb://localhost/bcrypt')
     .then(()=>{
@@ -25,9 +26,14 @@ app.get('/register', (req,res)=> {
    res.render('register.ejs')
 })
 
-app.post('/register', (req,res)=>{
-   let {username, password} = req.body;   
-   res.redirect('/')
+app.post('/register', async(req,res)=>{
+    let {username, password} = req.body;   
+    const salt = await bcrypt.genSalt(12);
+    const hashPassword = await bcrypt.hash(password, salt);
+    const user = new User ({username, password: hashPassword});
+    user.save();
+    res.redirect('/')
 })
+
 
 app.listen(3000, ()=> console.log('Port 3000'));
