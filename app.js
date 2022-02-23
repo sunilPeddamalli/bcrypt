@@ -1,6 +1,16 @@
 const express = require('express');
 const app = express();
 const path = require('path');
+const mongoose = require('mongoose');
+const User = require('./modals/user')
+
+mongoose.connect('mongodb://localhost/bcrypt')
+    .then(()=>{
+        console.log('connected to MongoDB for Bcrypt');
+    }).catch(e =>{
+        console.log('Mongo Error - Bcrypt');
+        console.log(e);
+    });
 
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'/views'));
@@ -11,12 +21,13 @@ app.get('/',(req,res)=> {
    res.send('Home Page!!!');
 });
 
-app.get('/login', (req,res)=> {
-   res.render('login.ejs')
+app.get('/register', (req,res)=> {
+   res.render('register.ejs')
 })
 
-app.post('/login', (req,res)=>{
-   res.send(req.body);
+app.post('/register', (req,res)=>{
+   let {username, password} = req.body;   
+   res.redirect('/')
 })
 
 app.listen(3000, ()=> console.log('Port 3000'));
