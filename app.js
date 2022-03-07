@@ -4,7 +4,8 @@ const path = require('path');
 const mongoose = require('mongoose');
 const User = require('./modals/user');
 const bcrypt = require('bcrypt');
-const { is } = require('express/lib/request');
+const session = require('express-session');
+
 
 mongoose.connect('mongodb://localhost/bcrypt')
     .then(()=>{
@@ -17,9 +18,11 @@ mongoose.connect('mongodb://localhost/bcrypt')
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'/views'));
 app.use(express.urlencoded({extended:true}));
+app.use(session({secret:'secret'}));
 
 app.get('/',(req,res)=> {
-   res.send('Home Page!!!');
+    if(!req.session.user_id) return res.redirect('/login');
+    return res.render('home.ejs')
 });
 
 app.get('/register', (req,res)=> {
@@ -44,7 +47,13 @@ app.post('/login', async(req,res)=> {
     const user = await User.findOne({username})
     const isValidUser = await bcrypt.compare(password, user.password);
     if(!isValidUser) return res.redirect('/login');
+    req.session.user_id = user._id;
     return res.redirect('/')
+});
+
+app.post('/logout', (req,res)=>{
+    req.session.user_id = null;
+    res.redirect('/login');
 });
 
 app.listen(3000, ()=> console.log('Port 3000'));
