@@ -20,8 +20,12 @@ app.set('views',path.join(__dirname,'/views'));
 app.use(express.urlencoded({extended:true}));
 app.use(session({secret:'secret'}));
 
-app.get('/',(req,res)=> {
+const requirelogin = (req,res, next) => {
     if(!req.session.user_id) return res.redirect('/login');
+    next();
+}
+
+app.get('/',requirelogin,(req,res)=> {   
     return res.render('home.ejs')
 });
 
@@ -35,8 +39,9 @@ app.post('/register', async(req,res)=>{
     const hashPassword = await bcrypt.hash(password, salt);
     const user = new User ({username, password: hashPassword});
     user.save();
+    req.session.user_id = user._id;
     res.redirect('/')
-})
+});
 
 app.get('/login', (req,res)=>{
     res.render('login.ejs');
